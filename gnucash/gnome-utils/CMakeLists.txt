@@ -56,6 +56,7 @@ set (gnome_utils_SOURCES
   gnc-account-sel.c
   gnc-amount-edit.c
   gnc-autosave.c
+  gnc-boolcolor-widget.c
   gnc-cell-renderer-date.c
   gnc-cell-renderer-popup.c
   gnc-cell-renderer-popup-entry.c
