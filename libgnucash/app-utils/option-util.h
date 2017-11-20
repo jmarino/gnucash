@@ -129,6 +129,11 @@ gboolean gnc_option_get_color_info(GNCOption *option,
                                    gdouble *green,
                                    gdouble *blue,
                                    gdouble *alpha);
+gboolean gnc_option_get_boolcolor_use_alpha(GNCOption *option);
+gboolean gnc_option_get_boolcolor_state(GNCOption *option,
+                                        gboolean use_default);
+gchar* gnc_option_get_boolcolor_color(GNCOption *option,
+                                      gboolean use_default);
 
 void gnc_option_call_option_widget_changed_proc (GNCOption *option);
 

@@ -37,6 +37,7 @@
 #include "engine-helpers-guile.h"
 #include "glib-helpers.h"
 #include "gnc-account-sel.h"
+#include "gnc-boolcolor-widget.h"
 #include "gnc-tree-view-account.h"
 #include "gnc-tree-model-account.h"
 #include "gnc-combott.h"
@@ -2848,6 +2849,32 @@ gnc_option_set_ui_widget_color (GNCOption *option, GtkBox *page_box,
 }
 
 static GtkWidget *
+gnc_option_set_ui_widget_boolcolor (GNCOption *option, GtkBox *page_box,
+                                    char *name, char *documentation,
+                                    /* Return values */
+                                    GtkWidget **enclosing, gboolean *packed)
+{
+    GtkWidget *value;
+    gboolean use_alpha;
+
+    *enclosing = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 5);
+    gtk_box_set_homogeneous (GTK_BOX (*enclosing), FALSE);
+
+    use_alpha = gnc_option_get_boolcolor_use_alpha (option);
+
+    value = gnc_boolcolor_new (name, use_alpha);
+    gnc_option_set_widget (option, value);
+    gnc_option_set_ui_value (option, FALSE);
+
+    g_signal_connect (G_OBJECT(value), "changed",
+                      G_CALLBACK(gnc_option_changed_widget_cb), option);
+
+    gtk_box_pack_start (GTK_BOX(*enclosing), value, FALSE, FALSE, 0);
+    gtk_widget_show_all (*enclosing);
+    return value;
+}
+
+static GtkWidget *
 gnc_option_set_ui_widget_font (GNCOption *option, GtkBox *page_box,
                                char *name, char *documentation,
                                /* Return values */
@@ -3494,6 +3521,30 @@ gnc_option_set_ui_value_color (GNCOption *option, gboolean use_default,
 }
 
 static gboolean
+gnc_option_set_ui_value_boolcolor (GNCOption *option, gboolean use_default,
+                                   GtkWidget *widget, SCM value)
+{
+    GdkRGBA color;
+    gboolean enabled;
+    gchar *color_str=NULL;
+
+    ENTER("option %p(%s)", option, gnc_option_name(option));
+    enabled = gnc_option_get_boolcolor_state (option, use_default);
+    color_str = gnc_option_get_boolcolor_color (option, use_default);
+    gnc_boolcolor_set_state (GNC_BOOLCOLOR(widget), enabled);
+    if (color_str != NULL)
+    {
+        gnc_boolcolor_set_color_from_string (GNC_BOOLCOLOR(widget), color_str);
+        g_free(color_str);
+        LEAVE("FALSE");
+        return FALSE;
+    }
+
+    LEAVE("TRUE");
+    return TRUE;
+}
+
+static gboolean
 gnc_option_set_ui_value_font (GNCOption *option, gboolean use_default,
                               GtkWidget *widget, SCM value)
 {
@@ -4027,6 +4078,29 @@ gnc_option_get_ui_value_color (GNCOption *option, GtkWidget *widget)
 }
 
 static SCM
+gnc_option_get_ui_value_boolcolor (GNCOption *option, GtkWidget *widget)
+{
+    SCM result;
+    GdkRGBA color;
+    gboolean enabled;
+    gchar *color_str;
+
+    ENTER("option %p(%s), widget %p",
+          option, gnc_option_name(option), widget);
+
+    enabled = gnc_boolcolor_get_state (GNC_BOOLCOLOR (widget));
+    gnc_boolcolor_get_color (GNC_BOOLCOLOR (widget), &color);
+
+    color_str = gdk_rgba_to_string (&color);
+    result = SCM_EOL;
+    result = scm_cons (scm_from_locale_string (color_str), result);
+    result = scm_cons (SCM_BOOL (enabled), result);
+    g_free(color_str);
+
+    return result;
+}
+
+static SCM
 gnc_option_get_ui_value_font (GNCOption *option, GtkWidget *widget)
 {
     GtkFontButton *font_button = GTK_FONT_BUTTON(widget);
@@ -4265,6 +4339,10 @@ static void gnc_options_initialize_options (void)
         {
             "color", gnc_option_set_ui_widget_color,
             gnc_option_set_ui_value_color, gnc_option_get_ui_value_color
+        },
+        {
+            "boolcolor", gnc_option_set_ui_widget_boolcolor,
+            gnc_option_set_ui_value_boolcolor, gnc_option_get_ui_value_boolcolor
         },
         {
             "font", gnc_option_set_ui_widget_font,

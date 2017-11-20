@@ -1316,6 +1316,101 @@ gnc_option_get_color_info(GNCOption *option,
 
 
 /********************************************************************\
+ * gnc_option_get_boolcolor_use_alpha                               *
+ *   returns true if the boolcolor option should use alpha          *
+ *   transparency.                                                  *
+ *                                                                  *
+ * Args: option - the GNCOption                                     *
+ * Returns: true if alpha transparency should be used               *
+\********************************************************************/
+gboolean
+gnc_option_get_boolcolor_use_alpha(GNCOption *option)
+{
+    SCM value;
+
+    initialize_getters();
+
+    value = scm_call_1(getters.option_data, option->guile_option);
+    return scm_is_true(value);
+}
+
+
+/********************************************************************\
+ * gnc_option_get_boolcolor_state                                   *
+ *   gets the state (enabled/disabled) from a boolcolor option.     *
+ *                                                                  *
+ * Args: option      - option to get info from                      *
+ *       use_default - use the default or current value             *
+ * Return: boolean state of option (enabled/disabled).              *
+ *         returns FALSE if anything went wrong.                    *
+\********************************************************************/
+gboolean
+gnc_option_get_boolcolor_state(GNCOption *option,
+                               gboolean use_default)
+{
+    SCM getter;
+    SCM value;
+
+    if (option == NULL)
+        return FALSE;
+
+    if (use_default)
+        getter = gnc_option_default_getter(option);
+    else
+        getter = gnc_option_getter(option);
+    if (getter == SCM_UNDEFINED)
+        return FALSE;
+
+    value = scm_call_0(getter);
+    if (!scm_is_list(value) || scm_is_null(value) || !scm_is_bool(SCM_CAR(value)))
+        return FALSE;
+    return scm_is_true (SCM_CAR (value));
+}
+
+
+/********************************************************************\
+ * gnc_option_get_boolcolor_color                                   *
+ *   gets the color from a boolcolor option.                        *
+ *   color is given as a rgba string "#rrggbb.                      *
+ *                                                                  *
+ * Args: option      - option to get info from                      *
+ *       use_default - use the default or current value             *
+ * Return: newly allocated color string. It must be freed by caller *
+ *         with g_free.                                             *
+ *         returns NULL if anythnig went wrong.                     *
+\********************************************************************/
+gchar *
+gnc_option_get_boolcolor_color(GNCOption *option,
+                               gboolean use_default)
+{
+    SCM getter;
+    SCM value;
+
+    if (option == NULL)
+        return NULL;
+
+    if (use_default)
+        getter = gnc_option_default_getter(option);
+    else
+        getter = gnc_option_getter(option);
+    if (getter == SCM_UNDEFINED)
+        return NULL;
+
+    value = scm_call_0(getter);
+    if (!scm_is_list(value) || scm_is_null(value))
+        return NULL;
+
+    /* skip first element in list: state */
+    value = SCM_CDR(value);
+    if (!scm_is_list(value) || scm_is_null(value) || !scm_is_string(SCM_CAR(value)))
+        return NULL;
+
+    /* color string */
+    return gnc_scm_to_utf8_string (SCM_CAR (value));
+}
+
+
+/********************************************************************\
  * gnc_option_set_default                                           *
  *   set the option to its default value                            *
  *                                                                  *
