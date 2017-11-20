@@ -112,6 +112,7 @@
 (export gnc:make-internal-option)
 (export gnc:make-query-option)
 (export gnc:make-color-option)
+(export gnc:make-boolcolor-option)
 (export gnc:make-dateformat-option)
 (export gnc:dateformat-get-format)
 (export gnc:currency-accounting-option-get-curr-doc-string)

@@ -1299,6 +1299,49 @@
      (list range use-alpha)
      #f #f #f)))
 
+;; Boolcolor options store a boolean and color string
+;;   value: (state color-str)
+;; The format of the color string is directly passed to jqplot, which
+;; accepts css spec colors.
+;; Examples: "#0000ff", "rgb(0,0,255)", "rgba(0,0,255,1.0)",
+;; Color names defined by the CSS spec (in lower case) can also be used.
+;;    (see https://www.w3schools.com/colors/colors_names.asp)
+;; The option-data is a boolean: use_alpha
+;;   use_alpha: boolean indicating whether to use alpha transparency.
+(define (gnc:make-boolcolor-option
+         section
+         name
+         sort-tag
+         documentation-string
+         default-value
+         use-alpha)
+
+  (define (validate-value value)
+    (cond ((not (list? value))
+           (list #f "boolcolor-option: value not a list"))
+          ((not (= 2 (length value)))
+           (list #f "boolcolor-option: value has wrong length"))
+          ((not (boolean? (car value)))
+           (list #f "boolcolor-option: bad state value"))
+          ((not (string? (second value)))
+           (list #f "boolcolor-option: bad color value"))
+          (else (list #t value))))
+
+  (let* ((value default-value)
+         (value->string (lambda ()
+                          (string-append "'" (gnc:value->string value)))))
+    (gnc:make-option
+     section name sort-tag 'boolcolor documentation-string
+     (lambda () value)                            ; getter
+     (lambda (x) (set! value x))                  ; setter
+     (lambda () default-value)                    ; default-getter
+     (gnc:restore-form-generator value->string)   ; generate-restore-form
+     #f                                           ; scm->kvp
+     #f                                           ; kvp->scm
+     validate-value                               ; value-validator
+     use-alpha                                    ; option-data
+     #f #f #f)))                                  ; option-data-fns, strings-getter, option-widget-changed-proc
+
 (define (gnc:color->hex-string color range)
   (define (html-value value)
     (inexact->exact
