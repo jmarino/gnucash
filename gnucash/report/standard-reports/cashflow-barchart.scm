@@ -105,21 +105,27 @@
     ;; Display tab
     (gnc:register-option
      options
-     (gnc:make-simple-boolean-option
+     (gnc:make-boolcolor-option
       gnc:pagename-display optname-show-in
-      "a" (N_ "Show money in?") #t))
+      "a" (N_ "Show money in?")
+      (list #t "#0080ff")   ; (enabled color-str)
+      #t))                  ; use_alpha
 
     (gnc:register-option
      options
-     (gnc:make-simple-boolean-option
+     (gnc:make-boolcolor-option
       gnc:pagename-display optname-show-out
-      "b" (N_ "Show money out?") #t))
+      "b" (N_ "Show money out?")
+      (list #t "firebrick") ; (enabled color-str)
+      #t))                  ; use_alpha
 
     (gnc:register-option
      options
-     (gnc:make-simple-boolean-option
+     (gnc:make-boolcolor-option
       gnc:pagename-display optname-show-net
-      "c" (N_ "Show net money flow?") #t))
+      "c" (N_ "Show net money flow?")
+      (list #t "rgb(44, 160, 44)") ; (enabled color-str)
+      #t))                         ; use_alpha
 
     (gnc:register-option
      options
@@ -176,9 +182,12 @@
                        price-source report-currency to-date-t64))
 
          (interval (get-option gnc:pagename-general optname-stepsize))
-         (show-in? (get-option gnc:pagename-display optname-show-in))
-         (show-out? (get-option gnc:pagename-display optname-show-out))
-         (show-net? (get-option gnc:pagename-display optname-show-net))
+         (show-in? (first (get-option gnc:pagename-display optname-show-in)))
+         (show-out? (first (get-option gnc:pagename-display optname-show-out)))
+         (show-net? (first (get-option gnc:pagename-display optname-show-net)))
+         (in-color (second (get-option gnc:pagename-display optname-show-in)))
+         (out-color (second (get-option gnc:pagename-display optname-show-out)))
+         (net-color (second (get-option gnc:pagename-display optname-show-net)))
          (show-table? (get-option gnc:pagename-display optname-show-table))
          (height (get-option gnc:pagename-display optname-plot-height))
          (width (get-option gnc:pagename-display optname-plot-width))
@@ -334,9 +343,9 @@
                   ))
           (gnc:html-barchart-set-col-colors!
            chart (append
-                  (if show-in? '("#0074D9") '())
-                  (if show-out? '("#FF4136") '())
-                  (if show-net? '("#2ECC40") '())
+                  (if show-in? (list in-color) '())
+                  (if show-out? (list out-color) '())
+                  (if show-net? (list net-color) '())
                   ))
           (gnc:report-percent-done 95)
 
